@@ -1,0 +1,4 @@
+com\example\meetingnotes\controller\ApiController.class
+com\example\meetingnotes\Application.class
+com\example\meetingnotes\service\AiService.class
+com\example\meetingnotes\service\EmailService.class

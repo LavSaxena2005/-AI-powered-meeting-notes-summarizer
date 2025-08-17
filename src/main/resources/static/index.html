@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI Meeting Notes - Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    textarea { width: 100%; }
+    input[type=text], input[type=email] { width: 60%; }
+    .col { margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <h1>AI Meeting Notes — Demo</h1>
+
+  <div class="col">
+    <label>Upload Transcript (.txt): </label><br>
+    <input type="file" id="fileInput" accept=".txt" />
+  </div>
+
+  <div class="col">
+    <label>Or paste transcript here:</label><br>
+    <textarea id="textInput" rows="8" placeholder="Paste meeting transcript..."></textarea>
+  </div>
+
+  <div class="col">
+    <label>Enter prompt (e.g., Summarize in bullet points):</label><br>
+    <input type="text" id="promptInput" placeholder="Summarize in bullet points" value="Summarize in bullet points" />
+  </div>
+
+  <div class="col">
+    <button id="genBtn">Generate Summary</button>
+  </div>
+
+  <h3>Generated Summary (editable)</h3>
+  <textarea id="summary" rows="10"></textarea>
+
+  <h3>Send Summary via Email</h3>
+  <input type="email" id="emailInput" placeholder="recipient@example.com" /><br><br>
+  <button id="sendBtn">Send Email</button>
+
+  <pre id="status"></pre>
+
+<script>
+document.getElementById('genBtn').addEventListener('click', async function() {
+    const fileEl = document.getElementById('fileInput');
+    const text = document.getElementById('textInput').value;
+    const prompt = document.getElementById('promptInput').value || 'Summarize in bullet points';
+
+    const fd = new FormData();
+    if (fileEl.files.length > 0) fd.append('file', fileEl.files[0]);
+    if (text) fd.append('text', text);
+    fd.append('prompt', prompt);
+
+    document.getElementById('status').innerText = 'Generating summary...';
+    const res = await fetch('/api/summarize', { method: 'POST', body: fd });
+    if (!res.ok) {
+        document.getElementById('status').innerText = 'Error: ' + res.statusText;
+        return;
+    }
+    const data = await res.json();
+    document.getElementById('summary').value = data.summary || '';
+    document.getElementById('status').innerText = 'Summary generated.';
+});
+
+document.getElementById('sendBtn').addEventListener('click', async function() {
+    const to = document.getElementById('emailInput').value;
+    const summary = document.getElementById('summary').value;
+    if (!to) { alert('Enter recipient email'); return; }
+    document.getElementById('status').innerText = 'Sending email...';
+    const res = await fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: to, summary: summary, subject: 'Meeting Summary' })
+    });
+    const data = await res.json();
+    document.getElementById('status').innerText = data.status;
+});
+</script>
+</body>
+</html>
